@@ -9,7 +9,7 @@ DISP TIME()
 EXECUTE "TIMEOUT /t 10"
 DISP TIME()
 
-COMMENT *** Pause for 30 seconds, no option to press key to bypass
+COMMENT *** Pause for 10 seconds, no option to press key to bypass
 COMMENT *** User still has option to press Ctrl+C to quit
 
 DISP TIME()
