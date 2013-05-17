@@ -7,6 +7,10 @@ COMMENT
   //RESULT Table RunningTotal_Output
 END
 
+COMMENT *** ax_main is the temorary script created by AX when running analytics
+COMMENT *** by testing to see if it is "U" undefined, you can tell if this script
+COMMENT *** is running locally or on AX
+
 IF FTYPE("ax_main") = "U" ACCEPT "Select Table" xf TO v_tablename
 
 OPEN %v_tablename%
