@@ -1,0 +1,145 @@
+@ACL1000
+^BATCH    New_Script                         
+COMMENT
+******************************************************************************************
+*** Script:      ACL_Find_Outliers
+*** Description: This script identifies statistical outliers in a table based on a key
+*** Usage:       Execute this script. It will ask you for a table, a key field, 
+                 a numeric field, and # of standard deviations from meant to consider as an
+                 outlier
+*** Created By:  Phil Lim, ACL Services
+******************************************************************************************
+
+    SET SAFETY OFF
+    SET OVERFLOW OFF
+    CLOSE PRI SEC
+
+COM
+******************************************************************************************
+*** Parameters for running in automated mode
+*** Leave these commented out if you want to use the dialog boxes
+******************************************************************************************
+
+    COM
+    v_Trans_Table = "T_AP_AUDIT_EXTRACT_Filt"
+    v_Trans_Amt_Field = "INVOICE_AMOUNT"
+    v_Acct_Num_Field = "Transaction Key"
+
+    COM C_Acct_Number
+    COM C_Trans_Amt
+    COM v_Num_Std_Dev_From_Mean
+
+
+COM
+******************************************************************************************
+*** Interactive Parameters
+******************************************************************************************
+
+    DIALOG (DIALOG TITLE "User Dialog" WIDTH 466 HEIGHT 161 ) (BUTTONSET TITLE "&OK;&Cancel" AT 372 12 DEFAULT 1 ) (TEXT TITLE "Find Outliers" AT 12 16 ) (ITEM TITLE "f" TO "v_Trans_Table" AT 180 48 WIDTH 173 HEIGHT 25 ) (TEXT TITLE "Select Transaction Table" AT 12 52 )
+    OPEN %v_Trans_Table%
+    DIALOG (DIALOG TITLE "User Dialog" WIDTH 464 HEIGHT 220 ) (BUTTONSET TITLE "&OK;&Cancel" AT 370 12 DEFAULT 1 ) (TEXT TITLE "Find Outliers" AT 12 16 ) (TEXT TITLE "Select Account Number" AT 12 52 ) (ITEM TITLE "C" TO "v_Acct_Num_Field" AT 180 48 WIDTH 171 ) (TEXT TITLE "Select Amount Field" AT 12 100 ) (ITEM TITLE "N" TO "v_Trans_Amt_Field" AT 180 96 WIDTH 171 ) (TEXT TITLE "Enter Number of Std Deviations from Mean to Consider as Outlier" AT 12 148 ) (EDIT TO "v_Num_Std_Dev_From_Mean_STR" AT 180 180 WIDTH 169 DEFAULT "3.0" )
+
+    IF FTYPE("v_Num_Std_Dev_From_Mean_STR") <> "c" v_Num_Std_Dev_From_Mean_STR  = "2" 
+    v_Num_Std_Dev_From_Mean = VALUE(v_Num_Std_Dev_From_Mean_STR 2)
+
+COM
+******************************************************************************************
+*** Main Logic
+******************************************************************************************
+
+COM *** Make a copy of the transaction table so that we don't muck it up
+
+    OPEN %v_Trans_Table%
+    EXTRACT RECORD TO T_Trans_Table
+
+    OPEN  T_Trans_Table
+    DEFINE FIELD C_Acct_Number COMPUTED %v_Acct_Num_Field%
+    DEFINE FIELD C_Trans_Amt COMPUTED %v_Trans_Amt_Field%
+
+COM 
+*** Summarize the transactions based on account number to get a subtotal per account
+*** Use an index for performance reasons instead of presorting
+*** Delete the count field in case it already exists in the table
+       
+    OPEN T_Trans_Table
+    INDEX ON C_Acct_Number TO INX_PKEY
+    DELETE FIELD COUNT OK
+    SET INDEX TO INX_PKEY
+
+    SUMMARIZE ON C_Acct_Number SUBTOTAL C_Trans_Amt as 'C_Trans_Amt_Total' OTHER ALL TO T_Acct_Totals
+
+COM *** Calculate the mean per account by taking the total and dividing by the count
+
+    OPEN T_Acct_Totals
+
+    DELETE FIELD C_Mean_Trans_Amt OK
+    DEFINE FIELD C_Mean_Trans_Amt COMPUTED 
+
+    DEC(C_Trans_Amt_Total 4)/DEC(COUNT 4) IF COUNT > 0
+    DEC(0 4)
+
+COM 
+*** Take our mean and bring it back to the transaction table through a relation based on
+*** account number
+
+    OPEN T_Acct_Totals
+    INDEX ON C_Acct_Number TO INX_T_Acct_Totals
+
+    OPEN T_Trans_Table
+    DEFINE RELATION C_Acct_Number WITH T_Acct_Totals INDEX INX_T_Acct_Totals
+
+COM 
+*** Calculate the variance of each transaction 
+*** The variance is the difference between the transaction amount and the mean squared
+
+    OPEN T_Trans_Table
+
+    DELETE FIELD C_Trans_Amt_Variance OK
+    DEFINE FIELD C_Trans_Amt_Variance COMPUTED (C_Trans_Amt-T_Acct_Totals.C_Mean_Trans_Amt)*(C_Trans_Amt-T_Acct_Totals.C_Mean_Trans_Amt)
+
+COM *** Subtotal the variance per account
+
+    SUMMARIZE ON C_Acct_Number SUBTOTAL C_Trans_Amt_Variance OTHER ALL TO T_Sum_Variance PRESORT
+
+    OPEN T_Sum_Variance
+    
+COM 
+*** Calculate the standard deviation 
+*** as the total variance by account divided by the number of transactions rooted
+
+    DELETE FIELD C_Std_Dev_Amt OK
+    DEFINE FIELD C_Std_Dev_Amt COMPUTED ROOT(C_Trans_Amt_Variance/COUNT 4)
+
+
+COM *** Bring our standard deviation back to our transaction table by account number
+
+    OPEN T_Sum_Variance
+    INDEX ON C_Acct_Number TO INX_T_Sum_Variance
+
+    OPEN T_Trans_Table
+    DEFINE RELATION C_Acct_Number WITH T_Sum_Variance INDEX INX_T_Sum_Variance
+
+COM 
+*** Calculate the upper and lower bound for outliers as 
+*** a number of standard deviations from the mean
+
+    OPEN T_Trans_Table
+
+    DELETE FIELD C_Lower_Outlier_Bound OK
+    DEFINE FIELD C_Lower_Outlier_Bound COMPUTED T_Acct_Totals.C_Mean_Trans_Amt-(T_Sum_Variance.C_Std_Dev_Amt*v_Num_Std_Dev_From_Mean)
+
+    DELETE FIELD C_Upper_Outlier_Bound OK
+    DEFINE FIELD C_Upper_Outlier_Bound COMPUTED T_Acct_Totals.C_Mean_Trans_Amt+(T_Sum_Variance.C_Std_Dev_Amt*v_Num_Std_Dev_From_Mean)
+
+    DELETE FIELD C_Mean_Trans_Amt OK
+    DEFINE FIELD C_Mean_Trans_Amt COMPUTED T_Acct_Totals.C_Mean_Trans_Amt
+
+COM *** Identify outliers
+
+    OPEN T_Trans_Table
+    SET FILTER TO NOT BETWEEN(C_Trans_Amt C_Lower_Outlier_Bound C_Upper_Outlier_Bound)
+    EXTRACT FIELDS ALL TO T_Outliers
+    OPEN T_Outliers
+^LOGFILE  FindOutliers                        "" "FindOutliers.LOG"
+[PARENT_FOLDER_ID] 0
+^OPEN 
