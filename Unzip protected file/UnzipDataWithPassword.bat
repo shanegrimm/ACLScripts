@@ -9,6 +9,7 @@ v_appsdir = "C:\ACL DATA\AN10 Demo\apps\"
 COMMENT *** Folder where zip file can be found and where output will be sent
 v_datadir = "C:\ACL DATA\AN10 Demo\"
 
+COMMENT *** Prompt for filename
 ACCEPT "Enter filename for zip file (data_encrypted.zip)" TO v_filename
 
 COMMENT *** Prompt for zip file password
