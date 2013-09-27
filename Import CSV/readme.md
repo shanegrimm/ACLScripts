@@ -20,18 +20,18 @@ It is possible to have an ACL Script (or an Analytic) automatically define a CSV
 </ol>
 
 
-<code>COMMENT *** Run Github script<br />
-COMMENT *** My repository: https://github.com/shanegrimm/ACLScripts <br />
-<br />
-v_scriptpath = "S:\Import CSV"<br />
-<br />
-SET SAFETY OFF<br />
-<br />
-OPEN Metaphor_APTrans_2002<br />
-<br />
-DELETE SCRIPT ImportCSV OK<br />
-DO "%v_scriptpath%\ImportCSV.bat"<br />
-DELETE SCRIPT ImportCSV OK<br />
-<br />
-SET SAFETY ON<br />
-</code>
+    COMMENT *** Run Github script
+    COMMENT *** My repository: https://github.com/shanegrimm/ACLScripts
+    
+    v_scriptpath = "S:\Import CSV"
+    
+    SET SAFETY OFF
+    
+    OPEN Metaphor_APTrans_2002
+    
+    DELETE SCRIPT ImportCSV OK
+    DO "%v_scriptpath%\ImportCSV.bat"
+    DELETE SCRIPT ImportCSV OK
+    
+    SET SAFETY ON
+
