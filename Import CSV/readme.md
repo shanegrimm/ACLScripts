@@ -11,3 +11,27 @@ It is possible to have an ACL Script (or an Analytic) automatically define a CSV
 	<li>I’m using IMPORT FORMAT which is new in 10.5</li> 
 	<li>My script is still pointing to the CSV file but it also creates a FIL file. Both files could be useable.</li>
 </ul>
+
+<h2>To run</h2>
+<ol>
+	<li>Copy scripts to a local folder</li>
+	<li>Secify location of scripts with v_scriptpath</li>
+	<li>Copy and paste following script into ACL and then run</li>
+</ol>
+
+
+<code>COMMENT *** Run Github script<br />
+COMMENT *** My repository: https://github.com/shanegrimm/ACLScripts <br />
+<br />
+v_scriptpath = "S:\Import CSV"<br />
+<br />
+SET SAFETY OFF<br />
+<br />
+OPEN Metaphor_APTrans_2002<br />
+<br />
+DELETE SCRIPT ImportCSV OK<br />
+DO "%v_scriptpath%\ImportCSV.bat"<br />
+DELETE SCRIPT ImportCSV OK<br />
+<br />
+SET SAFETY ON<br />
+</code>
