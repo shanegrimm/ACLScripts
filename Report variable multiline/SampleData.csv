@@ -1,0 +1,7 @@
+code,description,amount
+0004,The single line record,"321.12"
+0005,The multi line record,"83.21"
+,that wraps onto multiple,
+,lines,
+0006,Another single line record,"21.21"
+0007,Another single line record,"121.12"

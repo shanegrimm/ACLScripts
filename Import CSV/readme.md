@@ -23,7 +23,10 @@ It is possible to have an ACL Script (or an Analytic) automatically define a CSV
     COMMENT *** Run Github script
     COMMENT *** My repository: https://github.com/shanegrimm/ACLScripts
     
-    v_scriptpath = "S:\Import CSV"
+    v_scriptpath   = "S:\Import CSV"
+    v_filename     = "S:\Import CSV\Employees.csv"
+    v_recordlength = "250"
+    v_output       = "ResultTableName"
     
     SET SAFETY OFF
     
@@ -32,6 +35,12 @@ It is possible to have an ACL Script (or an Analytic) automatically define a CSV
     DELETE SCRIPT ImportCSV OK
     DO "%v_scriptpath%\ImportCSV.bat"
     DELETE SCRIPT ImportCSV OK
+
+    COMMENT *** Cleanup variables
+    DELETE v_scriptpath   OK
+    DELETE v_filename     OK
+    DELETE v_recordlength OK
+	DELETE v_output       OK
     
     SET SAFETY ON
 
