@@ -15,11 +15,16 @@ COMMENT *** Import Sample File, replace this with whatever you want
 	v_FileName          = "S:\Report variable multiline\SampleData.csv"
 	v_Output            = "tmp_Import"
 	v_Recordlength      = "250"
+	
 	DELETE BATCH ImportCSV OK
 	DO "%v_scriptpath%\ImportCSV.BAT"
 	DELETE BATCH ImportCSV OK
-	v_scriptpath = "%v_tmpscriptpath%"
+	
+	v_scriptpath        = "%v_tmpscriptpath%"
 	DELETE v_tmpscriptpath OK
+	v_field             = "description"
+	v_field_blank       = "code"
+	v_output            = "ReportVarMulti_output"
 COMMENT *** End of Import Sample File
 
 COMMENT *** BEGIN VALIDATION ***
@@ -34,7 +39,9 @@ OPEN tmp_Import
 
 COMMENT *** Prompt for input (v_field, v_field_blank and v_output)
 v_validate = F
+DELETE SCRIPT ReportVarMulti_B01 OK
 DO "%v_scriptpath%\ReportVarMulti_B01.BAT" WHILE v_validate = F
+DELETE SCRIPT ReportVarMulti_B01 OK
 DELETE v_validate OK
 
 DELETE v_test1    OK

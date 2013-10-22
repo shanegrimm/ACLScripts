@@ -15,3 +15,12 @@
     0006 Another single line record                                 21.21
     0007 Another single line record                                121.12
 <p>Since we need to expand the width of the description field we will need to consider the maximum number of lines that a single record could consume and multiply the width of the original description field by that value. We could then determine what record has the longest description and set the width to that. Or alternatively, we could send to CSV and re-import.</p>
+<p>Kick off this external script with the following within your ACL Project:</p>
+    COMMENT *** Run Github script
+    COMMENT *** My repository: https://github.com/shanegrimm/ACLScripts 
+    
+    v_scriptpath = "S:\Report variable multiline"
+    
+    DELETE SCRIPT ReportVarMulti OK
+    DO "%v_scriptpath%\ReportVarMulti.BAT"
+    DELETE SCRIPT ReportVarMulti OK
