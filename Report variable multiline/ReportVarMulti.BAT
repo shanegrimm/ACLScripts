@@ -43,9 +43,13 @@ DELETE SCRIPT ReportVarMulti_B01 OK
 DO "%v_scriptpath%\ReportVarMulti_B01.BAT" WHILE v_validate = F
 DELETE SCRIPT ReportVarMulti_B01 OK
 DELETE v_validate OK
-
 DELETE v_test1    OK
 DELETE v_test2    OK 
+
+COMMENT *** Cleanup wrapping text by using RECOFFSET() to pull text
+COMMENT *** from records below (if v_field_blank is blank).
+COMMENT *** Also testing to ensure v_field is not blank to avoid
+COMMENT *** grabbing empty values from the end of the file.
 
 DEFINE FIELD c_field_line2 COMPUTED
 AS "temp"
